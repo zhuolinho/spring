@@ -20,7 +20,7 @@ import java.util.List;
 @Builder
 public class CofferOrder implements Serializable {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String customer;
     @ManyToMany
