@@ -1,7 +1,10 @@
 package com.example.demo.repository;
 
 import com.example.demo.model.CofferOrder;
-import org.springframework.data.repository.CrudRepository;
 
-public interface CoffeeOrderRepository extends CrudRepository<CofferOrder, Long> {
+import java.util.List;
+
+public interface CoffeeOrderRepository extends BaseRepository<CofferOrder, Long> {
+    List<CofferOrder> findByCustomerOrderById(String customer);
+    List<CofferOrder> findByItemsName(String name);
 }
