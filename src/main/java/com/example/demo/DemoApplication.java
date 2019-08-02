@@ -2,14 +2,9 @@ package com.example.demo;
 
 import com.example.demo.mapper.CoffeeMapper;
 import com.example.demo.model.Coffee;
-import com.example.demo.model.CoffeeExample;
+import com.github.pagehelper.PageInfo;
 import lombok.extern.slf4j.Slf4j;
-import org.joda.money.CurrencyUnit;
-import org.joda.money.Money;
-import org.mybatis.generator.api.MyBatisGenerator;
-import org.mybatis.generator.config.Configuration;
-import org.mybatis.generator.config.xml.ConfigurationParser;
-import org.mybatis.generator.internal.DefaultShellCallback;
+import org.apache.ibatis.session.RowBounds;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
@@ -17,8 +12,6 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 
@@ -35,32 +28,18 @@ public class DemoApplication implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
-//        generateArtifacts();
-        playWithArtifacts();
+        coffeeMapper.findAllWithRowBounds(new RowBounds(1, 3)).forEach(c -> log.info("Page(1) Coffee {}", c));
+        coffeeMapper.findAllWithRowBounds(new RowBounds(2, 3)).forEach(c -> log.info("Page(2) Coffee {}", c));
+        log.info("===================");
+
+        coffeeMapper.findAllWithRowBounds(new RowBounds(1, 0)).forEach(c -> log.info("Page(1) Coffee {}", c));
+        log.info("===================");
+
+        coffeeMapper.findAllWithParam(1, 3).forEach(c -> log.info("Page(1) Coffee {}", c));
+        List<Coffee>list = coffeeMapper.findAllWithParam(2,3);
+        PageInfo pageInfo = new PageInfo(list);
+        log.info("PageInfo: {}", pageInfo);
     }
 
-    private void generateArtifacts() throws Exception {
-        List<String> warnings = new ArrayList<>();
-        ConfigurationParser cp = new ConfigurationParser(warnings);
-        Configuration config = cp.parseConfiguration(this.getClass().getResourceAsStream("/generatorConfig.xml"));
-        DefaultShellCallback callback = new DefaultShellCallback(true);
-        MyBatisGenerator myBatisGenerator = new MyBatisGenerator(config, callback, warnings);
-        myBatisGenerator.generate(null);
-    }
 
-    private void playWithArtifacts() {
-        Coffee espresso = new Coffee().withName("espresso").withPrice(Money.of(CurrencyUnit.of("CNY"), 20.0)).withCreateTime(new Date()).withUpdateTime(new Date());
-        coffeeMapper.insert(espresso);
-
-        Coffee latte = new Coffee().withName("latte").withPrice(Money.of(CurrencyUnit.of("CNY"), 30.0)).withCreateTime(new Date()).withUpdateTime(new Date());
-        coffeeMapper.insert(latte);
-
-        Coffee s = coffeeMapper.selectByPrimaryKey(1L);
-        log.info("Coffee {}", s);
-
-        CoffeeExample example = new CoffeeExample();
-        example.createCriteria().andNameEqualTo("latte");
-        List<Coffee> list = coffeeMapper.selectByExample(example);
-        list.forEach(e -> log.info("selectByExample: {}", e));
-    }
 }
