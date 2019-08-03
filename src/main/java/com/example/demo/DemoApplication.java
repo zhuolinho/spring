@@ -1,26 +1,33 @@
 package com.example.demo;
 
-import com.example.demo.mapper.CoffeeMapper;
 import com.example.demo.model.Coffee;
-import com.github.pagehelper.PageInfo;
+import com.example.demo.model.CoffeeOrder;
+import com.example.demo.model.OrderState;
+import com.example.demo.repository.CoffeeRepository;
+import com.example.demo.service.CoffeeOrderService;
+import com.example.demo.service.CoffeeService;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.ibatis.session.RowBounds;
-import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 
-import java.util.List;
-
+import java.util.Optional;
 
 @SpringBootApplication
 @Slf4j
-@MapperScan("com.example.demo.mapper")
+@EnableJpaRepositories
+@EnableTransactionManagement
 public class DemoApplication implements ApplicationRunner {
     @Autowired
-    private CoffeeMapper coffeeMapper;
+    private CoffeeRepository coffeeRepository;
+    @Autowired
+    private CoffeeService coffeeService;
+    @Autowired
+    private CoffeeOrderService orderService;
 
     public static void main(String[] args) {
         SpringApplication.run(DemoApplication.class, args);
@@ -28,17 +35,14 @@ public class DemoApplication implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
-        coffeeMapper.findAllWithRowBounds(new RowBounds(1, 3)).forEach(c -> log.info("Page(1) Coffee {}", c));
-        coffeeMapper.findAllWithRowBounds(new RowBounds(2, 3)).forEach(c -> log.info("Page(2) Coffee {}", c));
-        log.info("===================");
+        log.info("All Coffee: {}", coffeeRepository.findAll());
 
-        coffeeMapper.findAllWithRowBounds(new RowBounds(1, 0)).forEach(c -> log.info("Page(1) Coffee {}", c));
-        log.info("===================");
-
-        coffeeMapper.findAllWithParam(1, 3).forEach(c -> log.info("Page(1) Coffee {}", c));
-        List<Coffee>list = coffeeMapper.findAllWithParam(2,3);
-        PageInfo pageInfo = new PageInfo(list);
-        log.info("PageInfo: {}", pageInfo);
+        Optional<Coffee>latte = coffeeService.findOneCoffee("Latte");
+        if (latte.isPresent()) {
+            CoffeeOrder order = orderService.createOrder("Li Lei", latte.get());
+            log.info("Update INIT to PAID: {}", orderService.updateState(order, OrderState.PAID));
+            log.info("Update PAID to INIT: {}", orderService.updateState(order, OrderState.INIT));
+        }
     }
 
 
